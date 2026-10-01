@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="th" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PowerCalc Pro - เครื่องคำนวณพลังงานไฟฟ้า</title>
+    <title>PowerCalc Pro - Transformer Edition</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- React & ReactDOM -->
-    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     
     <!-- Babel for JSX -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -18,84 +18,280 @@
     <!-- Feather Icons -->
     <script src="https://unpkg.com/feather-icons"></script>
 
+    <!-- Google Fonts: Inter & Noto Sans Thai -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=Noto+Sans+Thai:wght@400;600;700;900&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'Noto Sans Thai', 'sans-serif'] },
+                    colors: {
+                        cyber: {
+                            purple: '#c084fc', // W
+                            orange: '#fb923c', // P
+                            blue: '#38bdf8',   // t
+                            green: '#4ade80',  // Money
+                            dark: '#020617',   // Background
+                            panel: '#0f172a',  // Card
+                            border: '#1e293b'
+                        }
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body {
-            font-family: 'Inter', sans-serif;
+            background-color: #020617;
+            background-image: 
+                linear-gradient(rgba(30, 41, 59, 0.5) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(30, 41, 59, 0.5) 1px, transparent 1px);
+            background-size: 30px 30px;
+            color: #f8fafc;
+            -webkit-font-smoothing: antialiased;
         }
-        /* Custom styles for input type number to hide arrows in some browsers */
-        input[type=number]::-webkit-inner-spin-button, 
-        input[type=number]::-webkit-outer-spin-button { 
-            -webkit-appearance: none; 
-            margin: 0; 
+
+        /* Sci-Fi Glass Panels */
+        .cyber-panel {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(51, 65, 85, 0.5);
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
+
+        .cyber-header {
+            background: rgba(2, 6, 23, 0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+        }
+
+        /* Glow Effects */
+        .glow-purple { text-shadow: 0 0 15px rgba(192, 132, 252, 0.8); }
+        .glow-orange { text-shadow: 0 0 15px rgba(251, 146, 60, 0.8); }
+        .glow-blue { text-shadow: 0 0 15px rgba(56, 189, 248, 0.8); }
+        .glow-green { text-shadow: 0 0 15px rgba(74, 222, 128, 0.8); }
+
+        .shadow-glow-purple { box-shadow: 0 0 20px rgba(192, 132, 252, 0.3); border-color: rgba(192, 132, 252, 0.5); }
+        .shadow-glow-orange { box-shadow: 0 0 20px rgba(251, 146, 60, 0.3); border-color: rgba(251, 146, 60, 0.5); }
+        .shadow-glow-blue { box-shadow: 0 0 20px rgba(56, 189, 248, 0.3); border-color: rgba(56, 189, 248, 0.5); }
+
+        /* Input Styles */
+        input[type="number"] { -moz-appearance: textfield; }
+        input[type="number"]::-webkit-inner-spin-button, 
+        input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
+        .cyber-input {
+            background: rgba(2, 6, 23, 0.6);
+            border: 1px solid rgba(51, 65, 85, 0.8);
+            color: white;
+            transition: all 0.3s ease;
+        }
+        .cyber-input:focus {
+            background: rgba(15, 23, 42, 0.9);
+            outline: none;
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.5); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
     </style>
 </head>
-<body class="bg-slate-50 font-sans text-slate-800 pb-20">
+<body class="pb-24 overflow-x-hidden">
 
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect } = React;
+        const { useState, useEffect, useRef } = React;
+
+        // แยก Component ลูกออกมาให้ถูกต้องตามหลัก React (ประกาศภายนอกฟังก์ชันหลัก)
+        const TransformerTriangle = ({ mode, setMode }) => {
+            const [hovered, setHovered] = useState(null);
+
+            // Transformer Logic: Caculate separation (แยกร่าง) based on selected mode
+            const getTransform = (piece) => {
+                const isSelected = mode === piece;
+                const isHovered = hovered === piece;
+                
+                // Base transform origins to center of each piece
+                let baseTx = 0, baseTy = 0, scale = 1;
+
+                if (isSelected) {
+                    // Selected piece pops out dramatically
+                    scale = 1.15;
+                    if (piece === 'findW') { baseTy = -40; }
+                    if (piece === 'findP') { baseTx = -40; baseTy = 30; }
+                    if (piece === 'findT') { baseTx = 40; baseTy = 30; }
+                } else {
+                    // Non-selected pieces retreat and shrink slightly
+                    scale = 0.9;
+                    if (piece === 'findW') { baseTy = 15; }
+                    if (piece === 'findP') { baseTx = 15; baseTy = -10; }
+                    if (piece === 'findT') { baseTx = -15; baseTy = -10; }
+                }
+
+                // Add slight movement on hover if not already selected
+                if (isHovered && !isSelected) {
+                    scale = 0.95;
+                    if (piece === 'findW') { baseTy -= 10; }
+                    if (piece === 'findP') { baseTx -= 10; baseTy += 10; }
+                    if (piece === 'findT') { baseTx += 10; baseTy += 10; }
+                }
+
+                return `translate(${baseTx}px, ${baseTy}px) scale(${scale})`;
+            };
+
+            const getOpacity = (piece) => (mode === piece ? 1 : 0.4);
+
+            return (
+                <div className="w-full h-80 flex items-center justify-center relative">
+                    {/* Glowing Core Background */}
+                    <div className={`absolute w-32 h-32 rounded-full blur-[60px] opacity-50 transition-colors duration-700
+                        ${mode === 'findW' ? 'bg-purple-600' : mode === 'findP' ? 'bg-orange-600' : 'bg-blue-600'}`}>
+                    </div>
+
+                    <div className="w-72 h-72 relative z-10">
+                        <svg viewBox="-20 -20 240 240" className="w-full h-full overflow-visible drop-shadow-2xl">
+                            <defs>
+                                {/* Futuristic Filters */}
+                                <filter id="glow-w"><feDropShadow dx="0" dy="0" stdDeviation="8" floodColor="#c084fc" floodOpacity="0.8"/></filter>
+                                <filter id="glow-p"><feDropShadow dx="0" dy="0" stdDeviation="8" floodColor="#fb923c" floodOpacity="0.8"/></filter>
+                                <filter id="glow-t"><feDropShadow dx="0" dy="0" stdDeviation="8" floodColor="#38bdf8" floodOpacity="0.8"/></filter>
+                            </defs>
+
+                            {/* W Section (Top) */}
+                            <g 
+                                onClick={() => setMode('findW')}
+                                onMouseEnter={() => setHovered('findW')}
+                                onMouseLeave={() => setHovered(null)}
+                                className="cursor-pointer"
+                                style={{ 
+                                    transform: getTransform('findW'), 
+                                    transformOrigin: '100px 60px',
+                                    opacity: getOpacity('findW'),
+                                    transition: 'all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)' 
+                                }}
+                            >
+                                <path d="M100 10 L145 82 L55 82 Z" fill="#1e1b4b" stroke="#c084fc" strokeWidth="3" filter={mode === 'findW' ? "url(#glow-w)" : ""} />
+                                {/* Detail lines */}
+                                <path d="M100 25 L130 75 L70 75 Z" fill="none" stroke="rgba(192, 132, 252, 0.3)" strokeWidth="1" />
+                                <text x="100" y="65" textAnchor="middle" fill="#c084fc" fontSize="28" fontWeight="900" className="glow-purple" style={{ pointerEvents: 'none' }}>W</text>
+                            </g>
+                            
+                            {/* P Section (Bottom Left) */}
+                            <g 
+                                onClick={() => setMode('findP')}
+                                onMouseEnter={() => setHovered('findP')}
+                                onMouseLeave={() => setHovered(null)}
+                                className="cursor-pointer"
+                                style={{ 
+                                    transform: getTransform('findP'), 
+                                    transformOrigin: '70px 130px',
+                                    opacity: getOpacity('findP'),
+                                    transition: 'all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)' 
+                                }}
+                            >
+                                <path d="M52 88 L98 88 L98 168 L8 168 Z" fill="#431407" stroke="#fb923c" strokeWidth="3" filter={mode === 'findP' ? "url(#glow-p)" : ""} />
+                                <path d="M45 98 L88 98 L88 158 L25 158 Z" fill="none" stroke="rgba(251, 146, 60, 0.3)" strokeWidth="1" />
+                                <text x="55" y="140" textAnchor="middle" fill="#fb923c" fontSize="28" fontWeight="900" className="glow-orange" style={{ pointerEvents: 'none' }}>P</text>
+                            </g>
+
+                            {/* t Section (Bottom Right) */}
+                            <g 
+                                onClick={() => setMode('findT')}
+                                onMouseEnter={() => setHovered('findT')}
+                                onMouseLeave={() => setHovered(null)}
+                                className="cursor-pointer"
+                                style={{ 
+                                    transform: getTransform('findT'), 
+                                    transformOrigin: '130px 130px',
+                                    opacity: getOpacity('findT'),
+                                    transition: 'all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)' 
+                                }}
+                            >
+                                <path d="M102 88 L148 88 L192 168 L102 168 Z" fill="#082f49" stroke="#38bdf8" strokeWidth="3" filter={mode === 'findT' ? "url(#glow-t)" : ""} />
+                                <path d="M112 98 L155 98 L175 158 L112 158 Z" fill="none" stroke="rgba(56, 189, 248, 0.3)" strokeWidth="1" />
+                                <text x="145" y="140" textAnchor="middle" fill="#38bdf8" fontSize="28" fontWeight="900" className="glow-blue" style={{ pointerEvents: 'none' }}>t</text>
+                            </g>
+
+                        </svg>
+                    </div>
+                </div>
+            );
+        };
+
+        const CyberInput = ({ label, unit, value, onChange, color, icon }) => {
+            const colorMap = {
+                purple: 'focus:border-cyber-purple shadow-glow-purple text-cyber-purple',
+                orange: 'focus:border-cyber-orange shadow-glow-orange text-cyber-orange',
+                blue: 'focus:border-cyber-blue shadow-glow-blue text-cyber-blue'
+            };
+            const iconBg = {
+                purple: 'bg-purple-900/50 text-purple-400 border-purple-500/50',
+                orange: 'bg-orange-900/50 text-orange-400 border-orange-500/50',
+                blue: 'bg-blue-900/50 text-blue-400 border-blue-500/50'
+            };
+
+            return (
+                <div className="mb-4">
+                    <label className="block text-xs font-bold text-slate-400 mb-2 ml-1 uppercase tracking-[0.2em]">{label}</label>
+                    <div className="relative group">
+                        <div className={`absolute inset-y-1 left-1 w-10 flex items-center justify-center rounded-lg border ${iconBg[color]} font-black backdrop-blur-sm z-10`}>
+                            {icon}
+                        </div>
+                        <input 
+                            type="number" 
+                            value={value} 
+                            onChange={(e) => onChange(e.target.value)} 
+                            className={`w-full cyber-input pl-14 pr-16 py-3 rounded-xl text-right font-black text-2xl outline-none ${value ? colorMap[color] : 'focus:border-slate-500'}`} 
+                            placeholder="0.00" 
+                        />
+                        <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                            <span className="text-slate-500 font-bold uppercase">{unit}</span>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
 
         const ElectricalDashboard = () => {
-            // --- State ส่วนคำนวณสูตร W = Pt ---
             const [calcMode, setCalcMode] = useState('findW'); 
             const [val1, setVal1] = useState('');
             const [val2, setVal2] = useState('');
             const [result, setResult] = useState(null);
 
-            // --- State ส่วนคำนวณค่าไฟบ้าน ---
             const [appliances, setAppliances] = useState([
-                { id: 1, name: 'เครื่องปรับอากาศ (12,000 BTU)', watts: 1200, hours: 8, quantity: 1 },
-                { id: 2, name: 'ตู้เย็น (7.4 คิว)', watts: 150, hours: 24, quantity: 1 },
-                { id: 3, name: 'ทีวี LED 50 นิ้ว', watts: 100, hours: 4, quantity: 1 },
-                { id: 4, name: 'หลอดไฟ LED', watts: 10, hours: 6, quantity: 5 },
+                { id: 1, name: 'Air Conditioner (12,000 BTU)', watts: 1200, hours: 8, quantity: 1 },
+                { id: 2, name: 'Cyber Refrigerator', watts: 150, hours: 24, quantity: 1 },
             ]);
             const [newItem, setNewItem] = useState({ name: '', watts: '', hours: '', quantity: 1 });
-            
-            // โหมดคำนวณค่าไฟ: 'simple' (คงที่) หรือ 'progressive' (อัตราก้าวหน้า กฟน.)
             const [billMode, setBillMode] = useState('progressive'); 
-            const [unitPrice, setUnitPrice] = useState(4.5); // สำหรับโหมด simple
-            const [ftRate, setFtRate] = useState(0.3972); // ค่า Ft (บาท/หน่วย)
+            const [unitPrice, setUnitPrice] = useState(4.5); 
+            const [ftRate, setFtRate] = useState(0.3972); 
 
-            // --- Logic คำนวณสูตร W = Pt ---
             const calculatePhysics = () => {
                 const v1 = parseFloat(val1);
                 const v2 = parseFloat(val2);
-
-                if (isNaN(v1) || isNaN(v2) || val1 === '' || val2 === '') {
-                    setResult(null);
-                    return;
-                }
-
+                if (isNaN(v1) || isNaN(v2) || val1 === '' || val2 === '') { setResult(null); return; }
                 let res = 0;
                 if (calcMode === 'findW') res = v1 * v2;      
                 else if (calcMode === 'findP') res = v1 / v2; 
                 else if (calcMode === 'findT') res = v1 / v2; 
-
                 setResult(res);
             };
 
-            useEffect(() => {
-                calculatePhysics();
-            }, [val1, val2, calcMode]);
+            useEffect(() => { calculatePhysics(); }, [val1, val2, calcMode]);
+            
+            useEffect(() => { if (window.feather) window.feather.replace(); });
 
-            // Request Feather Icons to update after renders
-            useEffect(() => {
-                if (window.feather) {
-                    window.feather.replace();
-                }
-            });
-
-            const handleModeChange = (mode) => {
-                setCalcMode(mode);
-                setVal1('');
-                setVal2('');
-                setResult(null);
-            };
-
-            // --- Logic คำนวณค่าไฟบ้าน ---
             const addAppliance = (e) => {
                 e.preventDefault();
                 if (!newItem.name || !newItem.watts || !newItem.hours) return;
@@ -103,586 +299,315 @@
                 setNewItem({ name: '', watts: '', hours: '', quantity: 1 });
             };
 
-            const removeAppliance = (id) => {
-                setAppliances(appliances.filter(app => app.id !== id));
-            };
+            const removeAppliance = (id) => setAppliances(appliances.filter(app => app.id !== id));
 
-            // คำนวณหน่วยรวม
-            const totalDailyUnits = appliances.reduce((sum, item) => {
-                return sum + ((item.watts / 1000) * item.hours * item.quantity);
-            }, 0);
-            
+            const totalDailyUnits = appliances.reduce((sum, item) => sum + ((item.watts / 1000) * item.hours * item.quantity), 0);
             const totalMonthlyUnits = totalDailyUnits * 30;
 
-            // --- ฟังก์ชันคำนวณค่าไฟแบบอัตราก้าวหน้า (Progressive Rate) ---
             const calculateProgressiveBill = (units) => {
-                let energyCharge = 0;
-                let serviceCharge = 0;
-                let rateType = '';
-
-                // เกณฑ์: ไม่เกิน 150 หน่วย ใช้ประเภท 1.1, เกิน 150 หน่วย ใช้ประเภท 1.2
+                let energyCharge = 0, serviceCharge = 0, rateType = '';
                 if (units <= 150) {
-                    rateType = 'ประเภท 1.1 (ไม่เกิน 150 หน่วย)';
-                    serviceCharge = 8.19;
-                    
-                    // Step 1: 1-15 หน่วย
-                    const step1 = Math.min(units, 15);
-                    energyCharge += step1 * 2.3488;
-                    let remaining = units - step1;
-
-                    // Step 2: 16-25 หน่วย (10 หน่วย)
-                    if (remaining > 0) {
-                        const step2 = Math.min(remaining, 10);
-                        energyCharge += step2 * 2.9882;
-                        remaining -= step2;
-                    }
-
-                    // Step 3: 26-35 หน่วย (10 หน่วย)
-                    if (remaining > 0) {
-                        const step3 = Math.min(remaining, 10);
-                        energyCharge += step3 * 3.2405;
-                        remaining -= step3;
-                    }
-
-                    // Step 4: 36-100 หน่วย (65 หน่วย)
-                    if (remaining > 0) {
-                        const step4 = Math.min(remaining, 65);
-                        energyCharge += step4 * 3.6237;
-                        remaining -= step4;
-                    }
-
-                    // Step 5: 101-150 หน่วย (50 หน่วย)
-                    if (remaining > 0) {
-                        const step5 = Math.min(remaining, 50);
-                        energyCharge += step5 * 3.7171;
-                        remaining -= step5;
-                    }
-                    
-                    // Step 6: 151-400 หน่วย (250 หน่วย) - กรณี Edge case 150 พอดี หรือตรรกะต่อเนื่อง
-                    if (remaining > 0) {
-                        const step6 = Math.min(remaining, 250);
-                        energyCharge += step6 * 4.2218;
-                        remaining -= step6;
-                    }
-
-                    // Step 7: 401+
-                    if (remaining > 0) {
-                        energyCharge += remaining * 4.4217;
-                    }
-
+                    rateType = 'TYPE 1.1 (≤150U)'; serviceCharge = 8.19;
+                    const step1 = Math.min(units, 15); energyCharge += step1 * 2.3488; let remaining = units - step1;
+                    if (remaining > 0) { const step2 = Math.min(remaining, 10); energyCharge += step2 * 2.9882; remaining -= step2; }
+                    if (remaining > 0) { const step3 = Math.min(remaining, 10); energyCharge += step3 * 3.2405; remaining -= step3; }
+                    if (remaining > 0) { const step4 = Math.min(remaining, 65); energyCharge += step4 * 3.6237; remaining -= step4; }
+                    if (remaining > 0) { const step5 = Math.min(remaining, 50); energyCharge += step5 * 3.7171; remaining -= step5; }
+                    if (remaining > 0) { const step6 = Math.min(remaining, 250); energyCharge += step6 * 4.2218; remaining -= step6; }
+                    if (remaining > 0) { energyCharge += remaining * 4.4217; }
                 } else {
-                    rateType = 'ประเภท 1.2 (เกิน 150 หน่วย)';
-                    serviceCharge = 24.62;
-
-                    // Step 1: 1-150 หน่วย
-                    const step1 = 150; 
-                    energyCharge += step1 * 3.2484;
-                    let remaining = units - step1;
-
-                    // Step 2: 151-400 หน่วย (250 หน่วย)
-                    if (remaining > 0) {
-                        const step2 = Math.min(remaining, 250);
-                        energyCharge += step2 * 4.2218;
-                        remaining -= step2;
-                    }
-
-                    // Step 3: เกิน 400 หน่วย
-                    if (remaining > 0) {
-                        energyCharge += remaining * 4.4217;
-                    }
+                    rateType = 'TYPE 1.2 (>150U)'; serviceCharge = 24.62;
+                    const step1 = 150; energyCharge += step1 * 3.2484; let remaining = units - step1;
+                    if (remaining > 0) { const step2 = Math.min(remaining, 250); energyCharge += step2 * 4.2218; remaining -= step2; }
+                    if (remaining > 0) { energyCharge += remaining * 4.4217; }
                 }
-
                 const ftCharge = units * ftRate;
                 const totalBeforeVat = energyCharge + serviceCharge + ftCharge;
                 const vat = totalBeforeVat * 0.07;
-                const grandTotal = totalBeforeVat + vat;
-
-                return { energyCharge, serviceCharge, ftCharge, vat, grandTotal, rateType };
+                return { energyCharge, serviceCharge, ftCharge, vat, grandTotal: totalBeforeVat + vat, rateType };
             };
 
-            // คำนวณยอดเงินตามโหมดที่เลือก
-            let monthlyBillData = { grandTotal: 0 };
-            
-            if (billMode === 'progressive') {
-                monthlyBillData = calculateProgressiveBill(totalMonthlyUnits);
-            } else {
-                // Simple Mode
-                const simpleTotal = totalMonthlyUnits * unitPrice;
-                monthlyBillData = { 
-                    grandTotal: simpleTotal, 
-                    energyCharge: simpleTotal, 
-                    serviceCharge: 0, 
-                    ftCharge: 0, 
-                    vat: 0, 
-                    rateType: 'กำหนดเอง' 
-                };
-            }
+            let monthlyBillData = billMode === 'progressive' 
+                ? calculateProgressiveBill(totalMonthlyUnits) 
+                : { grandTotal: totalMonthlyUnits * unitPrice, energyCharge: totalMonthlyUnits * unitPrice, serviceCharge: 0, ftCharge: 0, vat: 0, rateType: 'CUSTOM FIXED' };
 
             const totalYearlyCost = monthlyBillData.grandTotal * 12;
 
-            // --- Helpers for Styling ---
-            const getThemeColor = () => {
-                switch (calcMode) {
-                    case 'findW': return 'text-purple-600 bg-purple-50 border-purple-200 ring-purple-100';
-                    case 'findP': return 'text-orange-600 bg-orange-50 border-orange-200 ring-orange-100';
-                    case 'findT': return 'text-blue-600 bg-blue-50 border-blue-200 ring-blue-100';
-                    default: return 'text-gray-600';
-                }
-            };
-
             return (
-                <div>
-                    {/* Navbar / Header */}
-                    <div className="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
-                        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+                <div className="min-h-screen">
+                    
+                    {/* --- UNIFIED CYBER HEADER --- */}
+                    <header className="cyber-header sticky top-0 z-50 py-3 px-4 sm:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
                         <div className="flex items-center gap-3">
-                            <div className="bg-yellow-400 p-2 rounded-lg shadow-sm">
-                                <i data-feather="zap" className="w-6 h-6 text-white" style={{ fill: 'white' }}></i>
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-[0_0_15px_rgba(99,102,241,0.5)] border border-indigo-400/50">
+                                <i data-feather="cpu" className="text-white"></i>
                             </div>
                             <div>
-                            <h1 className="text-xl font-bold text-slate-800 leading-none">PowerCalc Pro</h1>
-                            <p className="text-xs text-slate-500 mt-1">เครื่องคำนวณพลังงานไฟฟ้าอัจฉริยะ</p>
+                                <h1 className="text-xl font-black text-white tracking-widest uppercase">PowerCalc <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400">TF-EDITION</span></h1>
                             </div>
                         </div>
-                        <div className="hidden md:flex items-center gap-2 text-xs bg-slate-100 px-3 py-1 rounded-full text-slate-600 font-medium">
-                            <i data-feather="settings" className="w-3 h-3"></i> V 2.1 (HTML Version)
-                        </div>
-                        </div>
-                    </div>
 
-                    <main className="max-w-6xl mx-auto p-4 md:p-8 space-y-12">
-
-                        {/* --- SECTION 1: Physics Calculator --- */}
-                        <section>
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="bg-indigo-600 w-1 h-8 rounded-full"></div>
-                            <h2 className="text-2xl font-bold text-slate-800">เครื่องคำนวณกฎทรงพลังงาน</h2>
-                        </div>
-                        
-                        <div className="grid lg:grid-cols-12 gap-8 bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
-                            
-                            {/* Left: Interactive SVG Triangle */}
-                            <div className="lg:col-span-5 bg-gradient-to-br from-slate-50 to-slate-100 p-8 flex flex-col items-center justify-center border-r border-slate-100 relative">
-                            <div className="absolute top-4 left-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Interactive Mode</div>
-                            
-                            {/* SVG Magic Triangle */}
-                            <div className="relative w-72 h-64 drop-shadow-2xl filter">
-                                <svg viewBox="0 0 200 173.2" className="w-full h-full cursor-pointer select-none">
-                                    <g onClick={() => handleModeChange('findW')} className="transition-all duration-300 group">
-                                    <path d="M100 0 L150 86.6 L50 86.6 Z" 
-                                            fill={calcMode === 'findW' ? '#9333ea' : '#d8b4fe'} 
-                                            className="transition-colors duration-300 stroke-white stroke-2" />
-                                    <text x="100" y="60" textAnchor="middle" fill="white" fontSize="24" fontWeight="bold">W</text>
-                                    </g>
-                                    <g onClick={() => handleModeChange('findP')} className="transition-all duration-300 group">
-                                    <path d="M50 86.6 L100 86.6 L100 173.2 L0 173.2 Z" 
-                                            fill={calcMode === 'findP' ? '#ea580c' : '#fdba74'} 
-                                            className="transition-colors duration-300 stroke-white stroke-2" />
-                                    <text x="50" y="145" textAnchor="middle" fill="white" fontSize="24" fontWeight="bold">P</text>
-                                    </g>
-                                    <g onClick={() => handleModeChange('findT')} className="transition-all duration-300 group">
-                                    <path d="M100 86.6 L150 86.6 L200 173.2 L100 173.2 Z" 
-                                            fill={calcMode === 'findT' ? '#2563eb' : '#93c5fd'} 
-                                            className="transition-colors duration-300 stroke-white stroke-2" />
-                                    <text x="150" y="145" textAnchor="middle" fill="white" fontSize="24" fontWeight="bold">t</text>
-                                    </g>
-                                </svg>
-                            </div>
-
-                            <div className="mt-8 text-center space-y-2">
-                                <p className="text-slate-500 text-sm">คลิกที่ส่วนของสามเหลี่ยมเพื่อเปลี่ยนสูตร</p>
-                                <div className={`inline-flex items-center px-4 py-2 rounded-full border ${getThemeColor()} transition-colors duration-300`}>
-                                    <span className="font-bold mr-2">
-                                        {calcMode === 'findW' && 'W'}
-                                        {calcMode === 'findP' && 'P'}
-                                        {calcMode === 'findT' && 't'}
-                                    </span>
-                                    <span className="text-sm font-medium">
-                                        {calcMode === 'findW' && '= กำลังไฟฟ้า (P) × เวลา (t)'}
-                                        {calcMode === 'findP' && '= พลังงาน (W) ÷ เวลา (t)'}
-                                        {calcMode === 'findT' && '= พลังงาน (W) ÷ กำลังไฟฟ้า (P)'}
-                                    </span>
-                                </div>
-                            </div>
-                            </div>
-
-                            {}
-                            {/* Right: Inputs & Result */}
-                            <div className="lg:col-span-7 p-8 flex flex-col justify-center">
-                            <div className="space-y-6 max-w-md mx-auto w-full">
-                                <div className="space-y-5">
-                                    {calcMode === 'findW' && (
-                                    <>
-                                        <InputField label="กำลังไฟฟ้า (P)" unit="วัตต์ (W)" value={val1} onChange={setVal1} color="orange" icon="P"/>
-                                        <div className="flex justify-center text-slate-300">
-                                            <i data-feather="plus" className="w-5 h-5" style={{ transform: 'rotate(45deg)' }}></i>
-                                        </div>
-                                        <InputField label="เวลาที่ใช้ (t)" unit="วินาที (s)" value={val2} onChange={setVal2} color="blue" icon="t"/>
-                                    </>
-                                    )}
-                                    {calcMode === 'findP' && (
-                                    <>
-                                        <InputField label="พลังงานไฟฟ้า (W)" unit="จูล (J)" value={val1} onChange={setVal1} color="purple" icon="W"/>
-                                        <div className="flex justify-center text-slate-300 font-bold text-xl">÷</div>
-                                        <InputField label="เวลาที่ใช้ (t)" unit="วินาที (s)" value={val2} onChange={setVal2} color="blue" icon="t"/>
-                                    </>
-                                    )}
-                                    {calcMode === 'findT' && (
-                                    <>
-                                        <InputField label="พลังงานไฟฟ้า (W)" unit="จูล (J)" value={val1} onChange={setVal1} color="purple" icon="W"/>
-                                        <div className="flex justify-center text-slate-300 font-bold text-xl">÷</div>
-                                        <InputField label="กำลังไฟฟ้า (P)" unit="วัตต์ (W)" value={val2} onChange={setVal2} color="orange" icon="P"/>
-                                    </>
-                                    )}
-                                </div>
-
-                                <div className={`relative overflow-hidden rounded-2xl p-6 text-center transition-all duration-500 ${result !== null ? 'bg-slate-800 shadow-lg scale-100' : 'bg-slate-100 scale-95 opacity-80'}`}>
-                                    <div className="relative z-10">
-                                        <span className="text-slate-400 text-xs font-medium uppercase tracking-widest mb-1 block">ผลลัพธ์การคำนวณ</span>
-                                        <div className="flex items-baseline justify-center gap-2">
-                                        <span className="text-5xl font-bold text-white tracking-tight">
-                                            {result !== null ? result.toLocaleString(undefined, { maximumFractionDigits: 2 }) : '0'}
-                                        </span>
-                                        <span className="text-xl font-medium text-slate-400">
-                                            {calcMode === 'findW' ? 'J' : calcMode === 'findP' ? 'W' : 's'}
-                                        </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            </div>
-                        </div>
-                        </section>
-
-                        {}
-                        {/* --- SECTION 2: Home Electricity Cost --- */}
-                        <section>
-                        {/* Header & Settings Control */}
-                        <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
-                            <div className="flex items-center gap-3">
-                                <div className="bg-green-600 w-1 h-8 rounded-full"></div>
-                                <div>
-                                <h2 className="text-2xl font-bold text-slate-800">ประมาณการค่าไฟบ้าน</h2>
-                                <p className="text-xs text-slate-500">คำนวณจากหน่วยไฟฟ้า (Unit) ที่ใช้จริง</p>
-                                </div>
-                            </div>
-                            
-                            {/* Mode Switcher */}
-                            <div className="bg-white p-1 rounded-xl shadow-sm border border-slate-200 flex items-center gap-1 self-start md:self-auto">
+                        {/* Top Global Controls (Moved Next to Settings) */}
+                        <div className="flex flex-wrap items-center gap-3 bg-slate-900/80 p-1.5 px-2 rounded-xl border border-slate-700 backdrop-blur-md">
+                            <div className="flex gap-1">
                                 <button 
-                                onClick={() => setBillMode('progressive')}
-                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${billMode === 'progressive' ? 'bg-green-100 text-green-700 shadow-sm' : 'text-slate-500 hover:bg-slate-50'}`}
+                                    onClick={() => setBillMode('progressive')}
+                                    className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all duration-300 ${billMode === 'progressive' ? 'bg-indigo-600/20 text-indigo-400 border border-indigo-500/50 shadow-[0_0_10px_rgba(79,70,229,0.3)]' : 'text-slate-400 hover:text-white border border-transparent'}`}
                                 >
-                                <i data-feather="file-text" className="w-4 h-4"></i> อัตราก้าวหน้า (กฟน.)
+                                    <span className="flex items-center gap-2"><i data-feather="trending-up" className="w-3 h-3"></i> กฟน.</span>
                                 </button>
                                 <button 
-                                onClick={() => setBillMode('simple')}
-                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${billMode === 'simple' ? 'bg-slate-100 text-slate-700 shadow-sm' : 'text-slate-500 hover:bg-slate-50'}`}
+                                    onClick={() => setBillMode('simple')}
+                                    className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all duration-300 ${billMode === 'simple' ? 'bg-orange-600/20 text-orange-400 border border-orange-500/50 shadow-[0_0_10px_rgba(249,115,22,0.3)]' : 'text-slate-400 hover:text-white border border-transparent'}`}
                                 >
-                                <i data-feather="settings" className="w-4 h-4"></i> กำหนดเอง (คงที่)
+                                    <span className="flex items-center gap-2"><i data-feather="crosshair" className="w-3 h-3"></i> กำหนดเอง</span>
                                 </button>
                             </div>
-                        </div>
 
-                        <div className="grid lg:grid-cols-3 gap-8">
-                            
-                            {/* Form & Cost Settings */}
-                            <div className="lg:col-span-1 space-y-6">
-                            
-                            {/* Cost Configuration Panel */}
-                            <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
-                                <div className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
-                                <i data-feather="settings" className="w-4 h-4"></i> ตั้งค่าตัวแปร
-                                </div>
-                                
-                                {billMode === 'simple' ? (
-                                <div className="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-200">
-                                    <span className="text-sm text-slate-500">ค่าไฟต่อหน่วย</span>
-                                    <div className="flex items-center gap-2">
-                                        <input 
-                                        type="number" 
-                                        value={unitPrice} 
-                                        onChange={(e) => setUnitPrice(Number(e.target.value))}
-                                        className="w-20 text-right font-bold text-slate-800 bg-white border border-slate-300 rounded-md px-2 py-1 outline-none focus:border-green-500"
-                                        />
-                                        <span className="text-xs text-slate-500">บาท</span>
-                                    </div>
-                                </div>
-                                ) : (
-                                <div className="space-y-3">
-                                    <div className="flex items-center justify-between bg-green-50/50 p-3 rounded-xl border border-green-100">
-                                    <div className="text-xs text-green-800">
-                                        <div className="font-bold">โหมดคิดค่าไฟจริง</div>
-                                        <div>(ตามประเภท 1 บ้านอยู่อาศัย)</div>
-                                    </div>
-                                    <i data-feather="check" className="w-5 h-5 text-green-600"></i>
-                                    </div>
-                                    <div className="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-200">
-                                    <span className="text-sm text-slate-500">ค่า Ft (บาท/หน่วย)</span>
-                                    <div className="flex items-center gap-2">
-                                        <input 
-                                            type="number" 
-                                            value={ftRate} 
-                                            onChange={(e) => setFtRate(Number(e.target.value))}
-                                            className="w-20 text-right font-bold text-slate-800 bg-white border border-slate-300 rounded-md px-2 py-1 outline-none focus:border-green-500"
-                                            step="0.0001"
-                                        />
-                                        <span className="text-xs text-slate-500">บาท</span>
-                                    </div>
-                                    </div>
-                                </div>
-                                )}
-                            </div>
+                            <div className="h-6 w-px bg-slate-700 mx-1 hidden sm:block"></div>
 
-                            {}
-                            {/* Add Appliance Form */}
-                            <div className="bg-white p-6 rounded-2xl shadow-lg border border-slate-100 sticky top-24">
-                                <h3 className="font-bold text-slate-700 mb-4 flex items-center gap-2">
-                                <div className="bg-green-100 p-1.5 rounded-md"><i data-feather="plus" className="w-4 h-4 text-green-600"></i></div>
-                                เพิ่มรายการใหม่
-                                </h3>
-                                <form onSubmit={addAppliance} className="space-y-4">
-                                <div className="space-y-1">
-                                    <label className="text-xs font-medium text-slate-500 ml-1">ชื่อเครื่องใช้ไฟฟ้า</label>
+                            {/* Parameter Settings based on mode */}
+                            {billMode === 'simple' ? (
+                                <div className="flex items-center gap-2 px-2">
+                                    <span className="text-xs font-bold text-slate-500 uppercase">Rate:</span>
                                     <input 
-                                        type="text" 
-                                        placeholder="เช่น แอร์, พัดลม" 
-                                        value={newItem.name}
-                                        onChange={(e) => setNewItem({...newItem, name: e.target.value})}
-                                        className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition"
+                                        type="number" value={unitPrice} onChange={(e) => setUnitPrice(Number(e.target.value))}
+                                        className="w-16 font-black text-orange-400 bg-transparent border-b border-slate-600 focus:border-orange-400 outline-none text-center"
                                     />
+                                    <span className="text-xs font-bold text-slate-500">THB/U</span>
                                 </div>
-                                
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-1">
-                                        <label className="text-xs font-medium text-slate-500 ml-1">กำลังไฟ (W)</label>
-                                        <input 
-                                        type="number" 
-                                        placeholder="0" 
-                                        value={newItem.watts}
-                                        onChange={(e) => setNewItem({...newItem, watts: e.target.value})}
-                                        className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition text-center"
-                                        />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <label className="text-xs font-medium text-slate-500 ml-1">จำนวน</label>
-                                        <div className="flex items-center">
-                                            <button type="button" onClick={() => setNewItem({...newItem, quantity: Math.max(1, parseInt(newItem.quantity || 1) - 1)})} className="p-3 bg-slate-100 rounded-l-xl border border-r-0 border-slate-200 hover:bg-slate-200">-</button>
-                                            <input 
-                                            type="number" 
-                                            value={newItem.quantity}
-                                            onChange={(e) => setNewItem({...newItem, quantity: e.target.value})}
-                                            className="w-full p-3 bg-slate-50 border-y border-slate-200 focus:ring-0 outline-none text-center"
-                                            />
-                                            <button type="button" onClick={() => setNewItem({...newItem, quantity: parseInt(newItem.quantity || 1) + 1})} className="p-3 bg-slate-100 rounded-r-xl border border-l-0 border-slate-200 hover:bg-slate-200">+</button>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-1">
-                                    <label className="text-xs font-medium text-slate-500 ml-1">ชั่วโมงใช้งาน / วัน</label>
+                            ) : (
+                                <div className="flex items-center gap-2 px-2">
+                                    <span className="text-xs font-bold text-slate-500 uppercase">Ft:</span>
                                     <input 
-                                        type="number" 
-                                        placeholder="0" 
-                                        value={newItem.hours}
-                                        onChange={(e) => setNewItem({...newItem, hours: e.target.value})}
-                                        className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition"
+                                        type="number" value={ftRate} onChange={(e) => setFtRate(Number(e.target.value))} step="0.0001"
+                                        className="w-20 font-black text-indigo-400 bg-transparent border-b border-slate-600 focus:border-indigo-400 outline-none text-center"
                                     />
-                                </div>
-
-                                <button type="submit" className="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-3 rounded-xl shadow-lg shadow-slate-900/20 transition-all flex items-center justify-center gap-2 mt-2">
-                                    <i data-feather="plus" className="w-5 h-5"></i> เพิ่มรายการ
-                                </button>
-                                </form>
-                            </div>
-                            </div>
-
-                            {}
-                            {/* List & Summary Area */}
-                            <div className="lg:col-span-2 flex flex-col gap-6">
-                            
-                            {/* Summary Cards */}
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <SummaryCard 
-                                    title="ใช้ไฟต่อเดือน" 
-                                    value={totalMonthlyUnits.toLocaleString(undefined, {maximumFractionDigits: 0})} 
-                                    unit="หน่วย (Unit)" 
-                                    icon={<i data-feather="zap" className="w-5 h-5 text-yellow-500"></i>}
-                                    bgColor="bg-slate-800"
-                                    textColor="text-white"
-                                    subtext={`เฉลี่ย ${totalDailyUnits.toFixed(1)} หน่วย/วัน`}
-                                />
-                                <SummaryCard 
-                                    title="ค่าไฟต่อเดือน (โดยประมาณ)" 
-                                    value={monthlyBillData.grandTotal.toLocaleString(undefined, {maximumFractionDigits: 2})} 
-                                    unit="บาท" 
-                                    icon={<i data-feather="dollar-sign" className="w-5 h-5 text-green-500"></i>}
-                                    bgColor="bg-white"
-                                    textColor="text-slate-800"
-                                    borderColor="border-green-200"
-                                    subtext={billMode === 'progressive' ? 'รวมค่าบริการ + Ft + VAT แล้ว' : `@ ${unitPrice} บ./หน่วย (ไม่รวม VAT)`}
-                                    highlight
-                                />
-                                <SummaryCard 
-                                    title="ค่าไฟต่อปี" 
-                                    value={totalYearlyCost.toLocaleString(undefined, {maximumFractionDigits: 0})} 
-                                    unit="บาท" 
-                                    icon={<i data-feather="home" className="w-5 h-5 text-blue-500"></i>}
-                                    bgColor="bg-white"
-                                    textColor="text-slate-800"
-                                    borderColor="border-blue-200"
-                                />
-                            </div>
-
-                            {/* Bill Breakdown (เฉพาะโหมด Progressive) */}
-                            {billMode === 'progressive' && (
-                                <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-                                <h4 className="font-bold text-slate-700 mb-4 pb-2 border-b border-slate-100 flex items-center justify-between">
-                                    <span>รายละเอียดบิลค่าไฟฟ้า (Estimate Bill)</span>
-                                    <span className="text-xs font-normal text-white bg-green-600 px-2 py-1 rounded">{monthlyBillData.rateType}</span>
-                                </h4>
-                                <div className="space-y-3 text-sm">
-                                    <div className="flex justify-between text-slate-600">
-                                        <span>ค่าพลังงานไฟฟ้า (Base Tariff)</span>
-                                        <span>{monthlyBillData.energyCharge.toLocaleString(undefined, {maximumFractionDigits: 2})} บาท</span>
-                                    </div>
-                                    <div className="flex justify-between text-slate-600">
-                                        <span>ค่าบริการรายเดือน (Service Charge)</span>
-                                        <span>{monthlyBillData.serviceCharge.toFixed(2)} บาท</span>
-                                    </div>
-                                    <div className="flex justify-between text-slate-600">
-                                        <span>ค่า Ft ({ftRate} บ./หน่วย)</span>
-                                        <span>{monthlyBillData.ftCharge.toLocaleString(undefined, {maximumFractionDigits: 2})} บาท</span>
-                                    </div>
-                                    <div className="flex justify-between text-slate-600 font-medium pt-2 border-t border-dashed border-slate-200">
-                                        <span>รวมเงินก่อนภาษี</span>
-                                        <span>{(monthlyBillData.energyCharge + monthlyBillData.serviceCharge + monthlyBillData.ftCharge).toLocaleString(undefined, {maximumFractionDigits: 2})} บาท</span>
-                                    </div>
-                                    <div className="flex justify-between text-slate-600">
-                                        <span>ภาษีมูลค่าเพิ่ม 7% (VAT)</span>
-                                        <span>{monthlyBillData.vat.toLocaleString(undefined, {maximumFractionDigits: 2})} บาท</span>
-                                    </div>
-                                    <div className="flex justify-between text-slate-800 font-bold text-lg pt-2 border-t border-slate-200 mt-2">
-                                        <span>ยอดรวมสุทธิ</span>
-                                        <span className="text-green-600">{monthlyBillData.grandTotal.toLocaleString(undefined, {maximumFractionDigits: 2})} บาท</span>
-                                    </div>
-                                </div>
+                                    <span className="text-xs font-bold text-slate-500">THB/U</span>
                                 </div>
                             )}
+                        </div>
+                    </header>
 
-                            {}
-                            {/* Table */}
-                            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex-grow">
-                                <div className="overflow-x-auto">
-                                <table className="w-full text-sm text-left">
-                                    <thead>
-                                        <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs uppercase tracking-wider">
-                                            <th className="px-6 py-4 font-medium">อุปกรณ์ไฟฟ้า</th>
-                                            <th className="px-6 py-4 font-medium text-center">กำลังไฟ (W)</th>
-                                            <th className="px-6 py-4 font-medium text-center">เวลา (ชม.)</th>
-                                            <th className="px-6 py-4 font-medium text-center">หน่วย/เดือน</th>
-                                            <th className="px-6 py-4 font-medium text-center">จัดการ</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-slate-100">
-                                        {appliances.map((item) => {
-                                        const dailyUnits = (item.watts / 1000) * item.hours * item.quantity;
-                                        const monthlyUnits = dailyUnits * 30;
-                                        return (
-                                            <tr key={item.id} className="hover:bg-slate-50/80 transition-colors group">
-                                            <td className="px-6 py-4">
-                                                <div className="font-semibold text-slate-700">{item.name}</div>
-                                                <div className="text-xs text-slate-400 mt-1 flex items-center gap-1">
-                                                    <span className="bg-slate-100 px-1.5 py-0.5 rounded">x{item.quantity} เครื่อง</span>
+                    <main className="max-w-6xl mx-auto px-4 sm:px-8 py-10 space-y-12">
+
+                        {/* */}
+                        <section>
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="w-8 h-8 rounded bg-slate-800 border border-slate-700 flex items-center justify-center"><i data-feather="hexagon" className="text-purple-400 w-4 h-4"></i></div>
+                                <h2 className="text-xl font-black text-white tracking-widest uppercase glow-purple">Physics Core <span className="text-slate-500 font-medium text-sm">W=Pt</span></h2>
+                            </div>
+                            
+                            <div className="grid lg:grid-cols-2 gap-8">
+                                {/* LEFT: Transformer Triangle */}
+                                <div className="cyber-panel p-8 flex flex-col items-center justify-center relative overflow-hidden group">
+                                    <div className="absolute top-4 left-4 flex items-center gap-2">
+                                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">System Online</span>
+                                    </div>
+                                    
+                                    {/* The magic happens here */}
+                                    <TransformerTriangle mode={calcMode} setMode={setCalcMode} />
+                                    
+                                    <div className="mt-4 text-center z-10 w-full">
+                                        <div className="bg-slate-900/80 border border-slate-700 rounded-xl p-4 flex items-center justify-between backdrop-blur-sm">
+                                            <div className="text-left">
+                                                <div className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">Active Formula</div>
+                                                <div className="text-lg font-black text-white font-mono">
+                                                    {calcMode === 'findW' && <><span className="text-purple-400 glow-purple">W</span> = P × t</>}
+                                                    {calcMode === 'findP' && <><span className="text-orange-400 glow-orange">P</span> = W ÷ t</>}
+                                                    {calcMode === 'findT' && <><span className="text-blue-400 glow-blue">t</span> = W ÷ P</>}
                                                 </div>
-                                            </td>
-                                            <td className="px-6 py-4 text-center">
-                                                <span className="bg-orange-50 text-orange-700 px-2 py-1 rounded-md font-medium text-xs">{item.watts} W</span>
-                                            </td>
-                                            <td className="px-6 py-4 text-center">
-                                                <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded-md font-medium text-xs">{item.hours} ชม.</span>
-                                            </td>
-                                            <td className="px-6 py-4 text-center">
-                                                <div className="font-bold text-slate-800">{monthlyUnits.toFixed(1)}</div>
-                                            </td>
-                                            <td className="px-6 py-4 text-center">
-                                                <button 
-                                                onClick={() => removeAppliance(item.id)} 
-                                                className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all"
-                                                title="ลบรายการ"
-                                                >
-                                                <i data-feather="trash-2" className="w-4 h-4"></i>
-                                                </button>
-                                            </td>
-                                            </tr>
-                                        );
-                                        })}
-                                    </tbody>
-                                </table>
+                                            </div>
+                                            <i data-feather="activity" className={`w-6 h-6 ${calcMode==='findW'?'text-purple-500':calcMode==='findP'?'text-orange-500':'text-blue-500'}`}></i>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* RIGHT: HUD Inputs & Result */}
+                                <div className="cyber-panel p-8 flex flex-col justify-between relative overflow-hidden">
+                                    {/* Tech Background pattern */}
+                                    <i data-feather="crosshair" className="absolute -right-10 -bottom-10 w-64 h-64 text-slate-800 opacity-30 stroke-[0.5]"></i>
+                                    
+                                    <div className="space-y-4 relative z-10">
+                                        {calcMode === 'findW' && (
+                                            <>
+                                                <CyberInput label="Power (P)" unit="Watt" value={val1} onChange={setVal1} color="orange" icon="P"/>
+                                                <div className="flex justify-center -my-3 relative z-10"><div className="w-8 h-8 rounded-full bg-slate-900 border border-slate-700 flex items-center justify-center text-slate-400 font-bold text-xl backdrop-blur-md">×</div></div>
+                                                <CyberInput label="Time (t)" unit="Sec" value={val2} onChange={setVal2} color="blue" icon="t"/>
+                                            </>
+                                        )}
+                                        {calcMode === 'findP' && (
+                                            <>
+                                                <CyberInput label="Work/Energy (W)" unit="Joule" value={val1} onChange={setVal1} color="purple" icon="W"/>
+                                                <div className="flex justify-center -my-3 relative z-10"><div className="w-8 h-8 rounded-full bg-slate-900 border border-slate-700 flex items-center justify-center text-slate-400 font-bold text-xl backdrop-blur-md">÷</div></div>
+                                                <CyberInput label="Time (t)" unit="Sec" value={val2} onChange={setVal2} color="blue" icon="t"/>
+                                            </>
+                                        )}
+                                        {calcMode === 'findT' && (
+                                            <>
+                                                <CyberInput label="Work/Energy (W)" unit="Joule" value={val1} onChange={setVal1} color="purple" icon="W"/>
+                                                <div className="flex justify-center -my-3 relative z-10"><div className="w-8 h-8 rounded-full bg-slate-900 border border-slate-700 flex items-center justify-center text-slate-400 font-bold text-xl backdrop-blur-md">÷</div></div>
+                                                <CyberInput label="Power (P)" unit="Watt" value={val2} onChange={setVal2} color="orange" icon="P"/>
+                                            </>
+                                        )}
+                                    </div>
+
+                                    {/* 3D Digital Result Screen */}
+                                    <div className={`mt-8 bg-black/50 border rounded-2xl p-6 text-center relative overflow-hidden transition-all duration-500
+                                        ${result !== null 
+                                            ? (calcMode==='findW' ? 'border-purple-500 shadow-[inset_0_0_20px_rgba(192,132,252,0.2)]' 
+                                            : calcMode==='findP' ? 'border-orange-500 shadow-[inset_0_0_20px_rgba(251,146,60,0.2)]' 
+                                            : 'border-blue-500 shadow-[inset_0_0_20px_rgba(56,189,248,0.2)]') 
+                                            : 'border-slate-800'}`}>
+                                        
+                                        <div className="absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.5)_50%)] bg-[length:100%_4px] pointer-events-none opacity-20"></div>
+                                        
+                                        <span className="text-[10px] font-black uppercase tracking-[0.3em] opacity-50 block mb-2 text-slate-400">Output Terminal</span>
+                                        <div className="flex items-baseline justify-center gap-3 font-mono">
+                                            <span className={`text-5xl sm:text-6xl font-black tracking-tighter
+                                                ${result !== null ? (calcMode==='findW'?'text-purple-400 glow-purple':calcMode==='findP'?'text-orange-400 glow-orange':'text-blue-400 glow-blue') : 'text-slate-600'}`}>
+                                                {result !== null ? result.toLocaleString(undefined, { maximumFractionDigits: 2 }) : '0.00'}
+                                            </span>
+                                            <span className="text-2xl font-bold opacity-60 text-slate-400">
+                                                {calcMode === 'findW' ? 'J' : calcMode === 'findP' ? 'W' : 's'}
+                                            </span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-
-                            </div>
-                        </div>
                         </section>
 
+                        {/* */}
+                        <section>
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="w-8 h-8 rounded bg-slate-800 border border-slate-700 flex items-center justify-center"><i data-feather="zap" className="text-green-400 w-4 h-4"></i></div>
+                                <h2 className="text-xl font-black text-white tracking-widest uppercase glow-green">Grid Simulation <span className="text-slate-500 font-medium text-sm">Billing</span></h2>
+                            </div>
+
+                            <div className="grid lg:grid-cols-3 gap-8">
+                                
+                                {/* Form */}
+                                <div className="lg:col-span-1">
+                                    <div className="cyber-panel p-6 sticky top-24">
+                                        <h3 className="font-bold text-white mb-5 flex items-center gap-2 uppercase tracking-wide text-sm">
+                                            <i data-feather="plus-square" className="w-4 h-4 text-green-400"></i> Add Appliance
+                                        </h3>
+                                        <form onSubmit={addAppliance} className="space-y-4">
+                                            <div>
+                                                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 ml-1">Device ID/Name</label>
+                                                <input type="text" value={newItem.name} onChange={(e) => setNewItem({...newItem, name: e.target.value})} className="w-full cyber-input rounded-lg p-3 text-sm font-bold" placeholder="e.g. A/C, TV..." />
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 ml-1">Power (W)</label>
+                                                    <input type="number" value={newItem.watts} onChange={(e) => setNewItem({...newItem, watts: e.target.value})} className="w-full cyber-input rounded-lg p-3 text-sm font-bold text-orange-400 text-center" placeholder="0" />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 ml-1">Quantity</label>
+                                                    <input type="number" value={newItem.quantity} onChange={(e) => setNewItem({...newItem, quantity: e.target.value})} className="w-full cyber-input rounded-lg p-3 text-sm font-bold text-center" />
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 ml-1">Usage (Hrs/Day)</label>
+                                                <input type="number" value={newItem.hours} onChange={(e) => setNewItem({...newItem, hours: e.target.value})} className="w-full cyber-input rounded-lg p-3 text-sm font-bold text-blue-400 text-center" placeholder="0" />
+                                            </div>
+                                            <button type="submit" className="w-full bg-green-500/20 hover:bg-green-500/30 text-green-400 border border-green-500/50 py-3 rounded-lg font-black uppercase tracking-[0.2em] transition-all shadow-[0_0_10px_rgba(74,222,128,0.2)] hover:shadow-[0_0_20px_rgba(74,222,128,0.4)] mt-4 text-xs">
+                                                Initialize
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+
+                                {/* Table & Summaries */}
+                                <div className="lg:col-span-2 flex flex-col gap-8">
+                                    
+                                    {/* 3D Summaries */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                                        <div className="cyber-panel p-5 relative overflow-hidden group">
+                                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Monthly Load</div>
+                                            <div className="text-3xl font-black text-white">{totalMonthlyUnits.toLocaleString(undefined, {maximumFractionDigits:0})} <span className="text-sm font-normal opacity-50">kWh</span></div>
+                                            <div className="text-[10px] text-slate-500 mt-2 font-mono">≈ {totalDailyUnits.toFixed(1)} kWh/Day</div>
+                                        </div>
+                                        
+                                        <div className="cyber-panel p-5 relative overflow-hidden border-green-500/30 shadow-[inset_0_0_20px_rgba(74,222,128,0.05)]">
+                                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Est. Bill (Month)</div>
+                                            <div className="text-3xl font-black text-green-400 glow-green">฿{monthlyBillData.grandTotal.toLocaleString(undefined, {maximumFractionDigits:0})}</div>
+                                            <div className="text-[10px] font-bold text-green-400 bg-green-400/10 border border-green-400/20 px-2 py-0.5 rounded-full inline-block mt-2 tracking-wider">{monthlyBillData.rateType}</div>
+                                        </div>
+
+                                        <div className="cyber-panel p-5 relative overflow-hidden border-blue-500/30">
+                                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Projection (Year)</div>
+                                            <div className="text-3xl font-black text-blue-400 glow-blue">฿{totalYearlyCost.toLocaleString(undefined, {maximumFractionDigits:0})}</div>
+                                            <div className="text-[10px] text-slate-500 mt-2 font-mono">Fixed Estimate x12</div>
+                                        </div>
+                                    </div>
+
+                                    {/* Breakdown Receipt (Cyber style) */}
+                                    {billMode === 'progressive' && totalMonthlyUnits > 0 && (
+                                        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col md:flex-row justify-between items-center gap-4 relative overflow-hidden">
+                                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-indigo-500 to-purple-500"></div>
+                                            <div className="flex items-center gap-4 pl-2">
+                                                <i data-feather="file-text" className="w-5 h-5 text-indigo-400"></i>
+                                                <div className="font-mono text-xs text-slate-400 space-y-1">
+                                                    <div><span className="text-slate-500">BASE:</span> {monthlyBillData.energyCharge.toFixed(2)}</div>
+                                                    <div><span className="text-slate-500">SERV:</span> {monthlyBillData.serviceCharge.toFixed(2)} | <span className="text-slate-500">FT:</span> {monthlyBillData.ftCharge.toFixed(2)}</div>
+                                                </div>
+                                            </div>
+                                            <div className="text-right border-l border-slate-800 pl-4">
+                                                <div className="text-[10px] font-bold text-slate-500 uppercase">+ VAT 7% ({monthlyBillData.vat.toFixed(2)})</div>
+                                                <div className="text-lg font-black text-white tracking-widest">TOTAL ฿{monthlyBillData.grandTotal.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Table */}
+                                    <div className="cyber-panel overflow-hidden flex-grow">
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-sm text-left">
+                                                <thead className="bg-slate-900/80 border-b border-slate-800">
+                                                    <tr>
+                                                        <th className="px-6 py-4 font-bold text-slate-500 uppercase tracking-widest text-[10px]">Appliance</th>
+                                                        <th className="px-6 py-4 font-bold text-slate-500 uppercase tracking-widest text-[10px] text-center">Power</th>
+                                                        <th className="px-6 py-4 font-bold text-slate-500 uppercase tracking-widest text-[10px] text-center">Time</th>
+                                                        <th className="px-6 py-4 font-bold text-slate-500 uppercase tracking-widest text-[10px] text-center">Load (kWh)</th>
+                                                        <th className="px-6 py-4 font-bold text-slate-500 uppercase tracking-widest text-[10px] text-center">CMD</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-slate-800/50">
+                                                    {appliances.map((item) => {
+                                                        const monthlyUnits = ((item.watts / 1000) * item.hours * item.quantity) * 30;
+                                                        return (
+                                                            <tr key={item.id} className="hover:bg-slate-800/30 transition-colors group">
+                                                                <td className="px-6 py-4">
+                                                                    <div className="font-bold text-slate-200">{item.name}</div>
+                                                                    {item.quantity > 1 && <span className="text-[10px] font-black text-slate-900 bg-slate-400 px-2 py-0.5 rounded mt-1 inline-block">x{item.quantity}</span>}
+                                                                </td>
+                                                                <td className="px-6 py-4 text-center font-mono text-orange-400">{item.watts}W</td>
+                                                                <td className="px-6 py-4 text-center font-mono text-blue-400">{item.hours}h</td>
+                                                                <td className="px-6 py-4 text-center font-black text-white bg-slate-900/50">{monthlyUnits.toFixed(1)}</td>
+                                                                <td className="px-6 py-4 text-center">
+                                                                    <button onClick={() => removeAppliance(item.id)} className="p-2 text-slate-600 hover:text-red-500 transition-colors">
+                                                                        <i data-feather="x-circle" className="w-4 h-4"></i>
+                                                                    </button>
+                                                                </td>
+                                                            </tr>
+                                                        );
+                                                    })}
+                                                    {appliances.length === 0 && (
+                                                        <tr><td colSpan="5" className="px-6 py-12 text-center font-mono text-slate-600">No active devices found.</td></tr>
+                                                    )}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
                     </main>
                 </div>
             );
         };
-
-        // --- Sub-components for cleaner code ---
-
-        const InputField = ({ label, unit, value, onChange, color, icon }) => {
-            const colorStyles = {
-                purple: 'focus:border-purple-500 focus:ring-purple-500/20 bg-purple-50/50 text-purple-700',
-                orange: 'focus:border-orange-500 focus:ring-orange-500/20 bg-orange-50/50 text-orange-700',
-                blue: 'focus:border-blue-500 focus:ring-blue-500/20 bg-blue-50/50 text-blue-700'
-            };
-
-            const iconColors = {
-                purple: 'bg-purple-500',
-                orange: 'bg-orange-500',
-                blue: 'bg-blue-500'
-            };
-
-            return (
-                <div>
-                <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wide ml-1">{label}</label>
-                <div className="relative group">
-                    <div className={`absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none`}>
-                        <span className={`w-8 h-8 rounded-lg ${iconColors[color]} text-white flex items-center justify-center font-bold text-sm shadow-sm`}>{icon}</span>
-                    </div>
-                    <input 
-                        type="number" 
-                        value={value} 
-                        onChange={(e) => onChange(e.target.value)} 
-                        className={`w-full pl-14 pr-16 py-3.5 border border-slate-200 rounded-2xl outline-none transition-all font-semibold text-lg ${colorStyles[color]}`} 
-                        placeholder="0" 
-                    />
-                    <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-                        <span className="text-slate-400 text-xs font-medium">{unit}</span>
-                    </div>
-                </div>
-                </div>
-            );
-        };
-
-        const SummaryCard = ({ title, value, unit, icon, bgColor, textColor, borderColor = 'border-transparent', subtext, highlight }) => (
-            <div className={`${bgColor} p-5 rounded-2xl shadow-sm border ${borderColor} relative overflow-hidden group hover:shadow-md transition-all ${highlight ? 'ring-2 ring-green-100' : ''}`}>
-                <div className="flex justify-between items-start mb-2 relative z-10">
-                    <span className={`text-xs font-medium ${textColor === 'text-white' ? 'text-slate-300' : 'text-slate-500'}`}>{title}</span>
-                    {icon}
-                </div>
-                <div className={`text-2xl font-bold ${textColor} relative z-10`}>
-                    {value} <span className="text-sm font-normal opacity-70">{unit}</span>
-                </div>
-                {subtext && <div className="text-[10px] opacity-70 mt-1 relative z-10">{subtext}</div>}
-                
-                {/* Decoration */}
-                <div className="absolute -bottom-4 -right-4 w-20 h-20 rounded-full bg-current opacity-5 group-hover:scale-150 transition-transform duration-500"></div>
-            </div>
-        );
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<ElectricalDashboard />);
