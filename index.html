@@ -419,7 +419,7 @@
                 <div className="min-h-screen flex flex-col font-sans">
                     
                     {/* Light Unified Header */}
-                    <header className="cyber-header sticky top-0 z-50 py-3 px-4 sm:px-6 flex flex-col md:flex-row items-center justify-between gap-3">
+                    <header className="cyber-header sticky top-0 z-50 py-3 px-4 sm:px-8 lg:px-12 flex flex-col md:flex-row items-center justify-between gap-3">
                         <div className="flex items-center gap-3 w-full md:w-auto justify-center md:justify-start">
                             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center shadow-md shrink-0">
                                 <FeatherIcon name="cpu" className="text-white w-5 h-5" />
@@ -455,7 +455,7 @@
                         </div>
                     </header>
 
-                    <main className="flex-grow max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-12">
+                    <main className="flex-grow w-full max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 py-6 sm:py-10 space-y-12">
 
                         {/* SECTION 1: Physics Drag & Drop Matrix */}
                         <section>
@@ -636,7 +636,7 @@
                                                     <span className="text-[10px] uppercase tracking-widest font-bold">Awaiting Summon...</span>
                                                 </div>
                                             ) : (
-                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 pb-2">
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 pb-2">
                                                     {appliances.map((item) => {
                                                         const monthlyUnits = ((item.watts / 1000) * item.hours * item.quantity) * 30;
                                                         return (
